@@ -1,0 +1,156 @@
+﻿version: '3.8'
+
+services:
+  # Servicio para desarrollo y testing en CPU
+  coreface-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    container_name: coreface-cpu
+    image: coreface:cpu
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./configs:/app/configs
+      - ./tests:/app/tests
+      - ./notebooks:/app/notebooks
+    environment:
+      PYTHONUNBUFFERED: 1
+      DEVICE: cpu
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+    networks:
+      - coreface-network
+    stdin_open: true
+    tty: true
+    command: tail -f /dev/null
+
+  # Servicio para entrenamiento con GPU
+  coreface-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    container_name: coreface-gpu
+    image: coreface:gpu
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      PYTHONUNBUFFERED: 1
+      DEVICE: cuda
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CUDA_LAUNCH_BLOCKING: 1
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./configs:/app/configs
+      - ./tests:/app/tests
+      - ./notebooks:/app/notebooks
+      - ./logs:/app/logs
+    networks:
+      - coreface-network
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
+    command: tail -f /dev/null
+
+  # Jupyter notebook para desarrollo interactivo
+  jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    container_name: coreface-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./notebooks:/app/notebooks
+      - ./configs:/app/configs
+    environment:
+      PYTHONUNBUFFERED: 1
+      JUPYTER_ENABLE_LAB: yes
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+    networks:
+      - coreface-network
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+
+  # TensorBoard para visualización de métricas
+  tensorboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    container_name: coreface-tensorboard
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - coreface-network
+    command: tensorboard --logdir=/app/logs --host=0.0.0.0 --port=6006
+
+  # Redis para cache (opcional)
+  redis:
+    image: redis:7-alpine
+    container_name: coreface-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - coreface-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  # PostgreSQL para almacenar resultados (opcional)
+  postgres:
+    image: postgres:15-alpine
+    container_name: coreface-db
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - coreface-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  coreface-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:

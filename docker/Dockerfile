@@ -1,0 +1,57 @@
+﻿# Imagen base con TensorFlow CPU
+FROM tensorflow/tensorflow:2.14.0
+
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    TZ=America/Guayaquil \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    curl \
+    libopencv-dev \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libglib2.0-0 \
+    libgl1-mesa-glx \
+    ffmpeg \
+    libpq-dev \
+    postgresql-client \
+    vim \
+    nano \
+    htop \
+    tmux \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar requirements y instalar dependencias Python
+COPY requirements-cpu.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements-cpu.txt
+
+# Crear directorios necesarios
+RUN mkdir -p /app/src \
+    /app/data \
+    /app/models \
+    /app/configs \
+    /app/tests \
+    /app/notebooks \
+    /app/logs
+
+# Copiar código fuente (esto se sobreescribirá con volúmenes en docker-compose)
+COPY . .
+
+# Exponer puertos
+EXPOSE 8888 6006
+
+# Comando por defecto (será sobreescrito por docker-compose)
+CMD ["bash"]

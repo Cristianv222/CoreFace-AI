@@ -1,0 +1,66 @@
+﻿# Imagen base con TensorFlow y GPU
+FROM tensorflow/tensorflow:2.14.0-gpu
+
+# Variables de entorno
+ENV PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    TZ=America/Guayaquil \
+    PYTHONDONTWRITEBYTECODE=1 \
+    CUDA_HOME=/usr/local/cuda \
+    PATH=/usr/local/cuda/bin:$PATH \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH \
+    TF_FORCE_GPU_ALLOW_GROWTH=true
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    curl \
+    libopencv-dev \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libglib2.0-0 \
+    libgl1-mesa-glx \
+    ffmpeg \
+    libpq-dev \
+    postgresql-client \
+    vim \
+    nano \
+    htop \
+    tmux \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar requirements y instalar dependencias Python
+COPY requirements-gpu.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements-gpu.txt
+
+# Crear directorios necesarios
+RUN mkdir -p /app/src \
+    /app/data \
+    /app/models \
+    /app/configs \
+    /app/tests \
+    /app/notebooks \
+    /app/logs \
+    /app/checkpoints
+
+# Copiar código fuente (esto se sobreescribirá con volúmenes en docker-compose)
+COPY . .
+
+# Exponer puertos
+EXPOSE 8888 6006
+
+# Healthcheck para verificar que TensorFlow puede acceder a la GPU
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import tensorflow as tf; assert len(tf.config.list_physical_devices('GPU')) > 0" || exit 1
+
+# Comando por defecto (será sobreescrito por docker-compose)
+CMD ["bash"]
