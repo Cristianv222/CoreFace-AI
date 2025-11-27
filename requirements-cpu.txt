@@ -21,7 +21,6 @@ tqdm==4.66.1
 python-dotenv==1.0.0
 
 # Visualization
-tensorboard==2.14.0
 jupyter==1.0.0
 ipykernel==6.25.1
 
