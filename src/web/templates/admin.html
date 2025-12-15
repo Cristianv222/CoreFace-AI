@@ -1,0 +1,1007 @@
+{% extends "base.html" %}
+
+{% block title %}Administración - CoreFace-AI v2.0{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="page-header mb-4">
+        <h2><i class="bi bi-gear-fill text-primary"></i> Panel de Administración</h2>
+        <p class="text-muted">Control total del sistema de reconocimiento facial</p>
+    </div>
+
+    <!-- Estadísticas Principales -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value">{{ personas|length }}</h3>
+                    <p class="stat-label">Personas Registradas</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="bi bi-images"></i>
+                </div>
+                <div class="stat-content">
+                    {% set total_fotos = personas|sum(attribute='fotos') %}
+                    <h3 class="stat-value">{{ total_fotos }}</h3>
+                    <p class="stat-label">Fotos Totales</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon" id="modeloStatusIcon">
+                    <i class="bi bi-cpu-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value">
+                        {% if lbph_cargado or deep_cargado %}
+                            <span class="badge bg-success">✓</span>
+                        {% else %}
+                            <span class="badge bg-danger">✗</span>
+                        {% endif %}
+                    </h3>
+                    <p class="stat-label">Estado del Modelo</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="bi bi-bar-chart-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value">
+                        {% if personas %}
+                            {{ (total_fotos / personas|length)|round|int }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </h3>
+                    <p class="stat-label">Promedio por Persona</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid Principal -->
+    <div class="row g-4">
+        <!-- Panel de Entrenamiento -->
+        <div class="col-lg-6">
+            <div class="stat-card h-100">
+                <h5 class="text-white mb-3">
+                    <i class="bi bi-cpu-fill text-primary"></i> Entrenamiento de Modelos
+                </h5>
+
+                <!-- Estado Actual -->
+                <div class="model-status-card mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-white mb-0">
+                            <i class="bi bi-info-circle-fill text-info"></i> Estado Actual
+                        </h6>
+                        <button id="refreshStatus" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-arrow-clockwise"></i> Actualizar
+                        </button>
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="model-status-item {% if lbph_cargado %}active{% endif %}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-circle-fill {% if lbph_cargado %}text-success{% else %}text-muted{% endif %}"></i>
+                                    <div>
+                                        <strong class="d-block">LBPH Mejorado</strong>
+                                        <small class="text-muted">
+                                            {% if lbph_cargado %}Activo{% else %}No entrenado{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% if lbph_cargado %}
+                                <span class="badge bg-success mt-2">
+                                    <i class="bi bi-speedometer"></i> Rápido
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-6">
+                            <div class="model-status-item {% if deep_cargado %}active{% endif %}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-circle-fill {% if deep_cargado %}text-success{% else %}text-muted{% endif %}"></i>
+                                    <div>
+                                        <strong class="d-block">Deep Learning</strong>
+                                        <small class="text-muted">
+                                            {% if deep_cargado %}Activo{% else %}No entrenado{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                {% if deep_cargado %}
+                                <span class="badge bg-primary mt-2">
+                                    <i class="bi bi-star-fill"></i> Preciso
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opciones de Entrenamiento -->
+                <div class="training-options mb-3">
+                    <h6 class="text-info mb-3">
+                        <i class="bi bi-sliders"></i> Opciones de Entrenamiento
+                    </h6>
+                    
+                    <div class="form-group mb-3">
+                        <label class="form-label text-white">Selecciona el modelo a entrenar:</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="modelType" id="modelLBPH" value="lbph" checked>
+                            <label class="btn btn-outline-success" for="modelLBPH">
+                                <i class="bi bi-speedometer"></i> LBPH
+                                <small class="d-block opacity-75">Rápido • Ligero</small>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="modelType" id="modelDeep" value="deep">
+                            <label class="btn btn-outline-primary" for="modelDeep">
+                                <i class="bi bi-star-fill"></i> Deep Learning
+                                <small class="d-block opacity-75">Preciso • Robusto</small>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="modelType" id="modelBoth" value="both">
+                            <label class="btn btn-outline-warning" for="modelBoth">
+                                <i class="bi bi-lightning-fill"></i> Ambos
+                                <small class="d-block opacity-75">Completo</small>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="useAugmentation" checked>
+                        <label class="form-check-label text-white" for="useAugmentation">
+                            <i class="bi bi-magic"></i> Data Augmentation
+                            <small class="d-block text-muted">
+                                Genera variaciones de cada foto (rotación, brillo, etc.)
+                            </small>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="d-grid gap-2 mb-3">
+                    <button id="trainBtn" class="btn btn-success btn-lg" {% if not personas %}disabled{% endif %}>
+                        <i class="bi bi-rocket-takeoff-fill"></i> Entrenar Modelo
+                    </button>
+                    
+                    {% if lbph_cargado or deep_cargado %}
+                    <button id="testModelBtn" class="btn btn-outline-info">
+                        <i class="bi bi-patch-check-fill"></i> Probar Modelo
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Progreso de Entrenamiento -->
+                <div id="trainProgress" style="display: none;">
+                    <div class="training-progress-card">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Entrenando...</span>
+                            </div>
+                            <div>
+                                <h6 class="text-white mb-1">
+                                    <i class="bi bi-cpu-fill text-primary"></i> Entrenando Modelo
+                                </h6>
+                                <p class="text-muted mb-0" id="trainStatusText">Iniciando entrenamiento...</p>
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div id="trainProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+                                 role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted mt-2 d-block" id="trainTimeEstimate">
+                            Tiempo estimado: calculando...
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Resultado del Entrenamiento -->
+                <div id="trainResult"></div>
+
+                <!-- Información -->
+                <div class="info-box mt-3">
+                    <h6 class="text-info mb-2">
+                        <i class="bi bi-lightbulb-fill"></i> Información:
+                    </h6>
+                    <ul class="text-muted small mb-0">
+                        <li><strong>LBPH:</strong> Rápido (30s-1min), ideal para tiempo real</li>
+                        <li><strong>Deep Learning:</strong> Preciso (2-5min), robusto ante oclusiones</li>
+                        <li><strong>Augmentation:</strong> Mejora precisión generando más datos</li>
+                        <li><strong>Mínimo recomendado:</strong> 50+ fotos por persona</li>
+                        <li><strong>Óptimo:</strong> 100+ fotos por persona con variaciones</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Personas -->
+        <div class="col-lg-6">
+            <div class="stat-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white mb-0">
+                        <i class="bi bi-people-fill text-warning"></i> Personas Registradas
+                    </h5>
+                    <a href="/capture" class="btn btn-sm btn-primary">
+                        <i class="bi bi-person-plus-fill"></i> Agregar Nueva
+                    </a>
+                </div>
+
+                {% if personas %}
+                    <div class="search-box mb-3">
+                        <input type="text" id="searchPerson" class="form-control" 
+                               placeholder="🔍 Buscar persona...">
+                    </div>
+
+                    <div id="personasList" class="personas-list">
+                        {% for persona in personas %}
+                        <div class="persona-card" data-nombre="{{ persona.nombre|lower }}">
+                            <div class="persona-avatar">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div class="persona-info">
+                                <h6 class="persona-name">{{ persona.nombre }}</h6>
+                                <div class="persona-stats">
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-images"></i> {{ persona.fotos }} fotos
+                                    </span>
+                                    {% if persona.variaciones %}
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-collection"></i> {{ persona.variaciones|length }} variaciones
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                {% if persona.variaciones %}
+                                <div class="variations-detail mt-2">
+                                    {% for var, count in persona.variaciones.items() %}
+                                    <small class="text-muted">{{ var }}: {{ count }}</small>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="persona-actions">
+                                <button class="btn btn-sm btn-outline-primary view-btn" 
+                                        data-nombre="{{ persona.nombre }}">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success add-more-btn" 
+                                        data-nombre="{{ persona.nombre }}">
+                                    <i class="bi bi-plus-circle-fill"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-btn" 
+                                        data-nombre="{{ persona.nombre }}">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Recomendaciones -->
+                    <div class="recommendations-box mt-3">
+                        <h6 class="text-warning mb-2">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Recomendaciones:
+                        </h6>
+                        {% for persona in personas %}
+                            {% if persona.fotos < 50 %}
+                            <div class="alert alert-warning py-2 mb-2">
+                                <small>
+                                    <strong>{{ persona.nombre }}</strong> tiene solo {{ persona.fotos }} fotos. 
+                                    Se recomienda capturar al menos 50 fotos.
+                                    <a href="/capture" class="alert-link">Agregar más</a>
+                                </small>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+                        <h5 class="text-white">No hay personas registradas</h5>
+                        <p class="text-muted">
+                            Comienza capturando fotos de personas para entrenar el modelo
+                        </p>
+                        <a href="/capture" class="btn btn-primary mt-3">
+                            <i class="bi bi-camera-fill"></i> Ir a Captura
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de Configuración Avanzada -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="stat-card">
+                <h5 class="text-white mb-3">
+                    <i class="bi bi-sliders text-success"></i> Configuración Avanzada
+                </h5>
+                
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="config-card">
+                            <h6 class="text-info">
+                                <i class="bi bi-toggle-on"></i> Modelo Activo
+                            </h6>
+                            <select id="activeModel" class="form-select">
+                                <option value="lbph" {% if modelo_activo == 'lbph' %}selected{% endif %}>LBPH Mejorado</option>
+                                <option value="deep" {% if modelo_activo == 'deep' %}selected{% endif %}>Deep Learning</option>
+                            </select>
+                            <small class="text-muted d-block mt-2">
+                                Modelo usado para reconocimiento en tiempo real
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="config-card">
+                            <h6 class="text-info">
+                                <i class="bi bi-speedometer2"></i> Umbral de Confianza
+                            </h6>
+                            <input type="range" class="form-range" id="confidenceThreshold" 
+                                   min="30" max="90" value="70">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">Bajo (30%)</small>
+                                <strong class="text-white" id="thresholdValue">70%</strong>
+                                <small class="text-muted">Alto (90%)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="config-card">
+                            <h6 class="text-info">
+                                <i class="bi bi-trash3"></i> Mantenimiento
+                            </h6>
+                            <div class="d-grid gap-2">
+                                <button id="clearCacheBtn" class="btn btn-outline-warning btn-sm">
+                                    <i class="bi bi-arrow-clockwise"></i> Limpiar Caché
+                                </button>
+                                <button id="exportDataBtn" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-download"></i> Exportar Datos
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">
+                    ¿Estás seguro de eliminar a <strong id="deletePersonName"></strong>?
+                </p>
+                <p class="text-muted small mt-2">
+                    <i class="bi bi-info-circle"></i> Esta acción eliminará todas las fotos y no se puede deshacer.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <i class="bi bi-trash-fill"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Detalles de Persona -->
+<div class="modal fade" id="viewPersonModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-circle"></i> Detalles de <span id="viewPersonName"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewPersonContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .model-status-card {
+        background: rgba(14, 165, 233, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .model-status-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        transition: all 0.3s;
+    }
+
+    .model-status-item.active {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: #22c55e;
+    }
+
+    .training-options {
+        background: rgba(99, 102, 241, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .training-progress-card {
+        background: rgba(14, 165, 233, 0.1);
+        border: 1px solid #0ea5e9;
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .personas-list {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .persona-card {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s;
+    }
+
+    .persona-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-2px);
+    }
+
+    .persona-avatar {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+    }
+
+    .persona-info {
+        flex: 1;
+    }
+
+    .persona-name {
+        color: #fff;
+        margin-bottom: 0.5rem;
+    }
+
+    .persona-stats {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .variations-detail {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .persona-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .search-box input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: #fff;
+    }
+
+    .search-box input:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--primary-color);
+        color: #fff;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .recommendations-box {
+        background: rgba(245, 158, 11, 0.05);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .config-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .info-box {
+        background: rgba(99, 102, 241, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1.25rem;
+    }
+
+    .info-box ul {
+        padding-left: 1.25rem;
+        margin-bottom: 0;
+    }
+
+    .info-box li {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Scrollbar personalizado */
+    .personas-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .personas-list::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .personas-list::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ============================================================
+// CoreFace-AI v2.0 - Panel de Administración
+// ============================================================
+
+console.log('🚀 Admin Panel v2.0 - Inicializando...');
+
+// Variables globales
+let deletePersonName = null;
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM cargado, inicializando eventos...');
+    
+    // Event Listeners
+    initEventListeners();
+    
+    console.log('✅ Admin Panel inicializado');
+});
+
+function initEventListeners() {
+    // Botón de entrenar modelo
+    const trainBtn = document.getElementById('trainBtn');
+    if (trainBtn) {
+        trainBtn.addEventListener('click', trainModel);
+    }
+    
+    // Botón de actualizar estado
+    const refreshBtn = document.getElementById('refreshStatus');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshStatus);
+    }
+    
+    // Botón de probar modelo
+    const testBtn = document.getElementById('testModelBtn');
+    if (testBtn) {
+        testBtn.addEventListener('click', testModel);
+    }
+    
+    // Búsqueda de personas
+    const searchInput = document.getElementById('searchPerson');
+    if (searchInput) {
+        searchInput.addEventListener('input', filterPersonas);
+    }
+    
+    // Botones de acciones de personas
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            deletePersonName = this.dataset.nombre;
+            document.getElementById('deletePersonName').textContent = deletePersonName;
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            modal.show();
+        });
+    });
+    
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            viewPersonDetails(this.dataset.nombre);
+        });
+    });
+    
+    document.querySelectorAll('.add-more-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            window.location.href = `/capture?persona=${encodeURIComponent(this.dataset.nombre)}`;
+        });
+    });
+    
+    // Confirmar eliminación
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', deletePerson);
+    }
+    
+    // Slider de confianza
+    const confidenceSlider = document.getElementById('confidenceThreshold');
+    if (confidenceSlider) {
+        confidenceSlider.addEventListener('input', function() {
+            document.getElementById('thresholdValue').textContent = this.value + '%';
+        });
+    }
+    
+    // Botones de mantenimiento
+    const clearCacheBtn = document.getElementById('clearCacheBtn');
+    if (clearCacheBtn) {
+        clearCacheBtn.addEventListener('click', clearCache);
+    }
+    
+    const exportBtn = document.getElementById('exportDataBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportData);
+    }
+}
+
+// ============================================================
+// ENTRENAMIENTO DE MODELO
+// ============================================================
+async function trainModel() {
+    const trainBtn = document.getElementById('trainBtn');
+    const trainProgress = document.getElementById('trainProgress');
+    const trainResult = document.getElementById('trainResult');
+    
+    // Obtener opciones
+    const modelType = document.querySelector('input[name="modelType"]:checked').value;
+    const useAugmentation = document.getElementById('useAugmentation').checked;
+    
+    console.log(`🚀 Iniciando entrenamiento: ${modelType}, Augmentation: ${useAugmentation}`);
+    
+    // Deshabilitar botón y mostrar progreso
+    trainBtn.disabled = true;
+    trainProgress.style.display = 'block';
+    trainResult.innerHTML = '';
+    
+    // Actualizar texto de progreso
+    document.getElementById('trainStatusText').textContent = 'Preparando datos...';
+    document.getElementById('trainProgressBar').style.width = '10%';
+    
+    try {
+        const response = await fetch('/api/train', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model_type: modelType,
+                use_augmentation: useAugmentation
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Simular progreso mientras entrena
+        await simulateProgress();
+        
+        // Ocultar progreso
+        trainProgress.style.display = 'none';
+        
+        if (data.success) {
+            // Mostrar resultado exitoso
+            trainResult.innerHTML = `
+                <div class="alert alert-success border-0 d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+                    <div>
+                        <h6 class="mb-1">✅ Entrenamiento Completado</h6>
+                        <small>${data.message || 'Modelo entrenado exitosamente'}</small>
+                        ${data.modelo_activo ? `<br><small class="text-muted">Modelo activo: ${data.modelo_activo}</small>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Recargar página después de 2 segundos
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+            
+        } else {
+            throw new Error(data.message || 'Error desconocido');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error en entrenamiento:', error);
+        
+        trainProgress.style.display = 'none';
+        
+        trainResult.innerHTML = `
+            <div class="alert alert-danger border-0 d-flex align-items-center">
+                <i class="bi bi-x-circle-fill fs-3 me-3"></i>
+                <div>
+                    <h6 class="mb-1">❌ Error en el Entrenamiento</h6>
+                    <small>${error.message}</small>
+                </div>
+            </div>
+        `;
+        
+        trainBtn.disabled = false;
+    }
+}
+
+async function simulateProgress() {
+    const progressBar = document.getElementById('trainProgressBar');
+    const statusText = document.getElementById('trainStatusText');
+    const timeEstimate = document.getElementById('trainTimeEstimate');
+    
+    const steps = [
+        { progress: 20, text: 'Cargando imágenes...', time: 'Tiempo estimado: 2-3 min' },
+        { progress: 40, text: 'Procesando características...', time: 'Tiempo restante: 1-2 min' },
+        { progress: 60, text: 'Entrenando modelo...', time: 'Tiempo restante: 30-60 seg' },
+        { progress: 80, text: 'Optimizando parámetros...', time: 'Tiempo restante: 15-30 seg' },
+        { progress: 95, text: 'Finalizando...', time: 'Tiempo restante: 5-10 seg' }
+    ];
+    
+    for (const step of steps) {
+        await sleep(800);
+        progressBar.style.width = step.progress + '%';
+        statusText.textContent = step.text;
+        timeEstimate.textContent = step.time;
+    }
+    
+    await sleep(500);
+    progressBar.style.width = '100%';
+}
+
+// ============================================================
+// REFRESCAR ESTADO
+// ============================================================
+async function refreshStatus() {
+    const btn = document.getElementById('refreshStatus');
+    const originalHTML = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="bi bi-arrow-clockwise spinner-border spinner-border-sm"></i> Actualizando...';
+    btn.disabled = true;
+    
+    try {
+        await sleep(500);
+        location.reload();
+    } catch (error) {
+        console.error('Error refrescando estado:', error);
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
+}
+
+// ============================================================
+// PROBAR MODELO
+// ============================================================
+function testModel() {
+    window.location.href = '/recognize';
+}
+
+// ============================================================
+// GESTIÓN DE PERSONAS
+// ============================================================
+function filterPersonas() {
+    const searchTerm = document.getElementById('searchPerson').value.toLowerCase();
+    const personaCards = document.querySelectorAll('.persona-card');
+    
+    personaCards.forEach(card => {
+        const nombre = card.dataset.nombre;
+        if (nombre.includes(searchTerm)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+async function deletePerson() {
+    if (!deletePersonName) return;
+    
+    const confirmBtn = document.getElementById('confirmDelete');
+    const originalHTML = confirmBtn.innerHTML;
+    
+    confirmBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Eliminando...';
+    confirmBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/delete_person', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                nombre: deletePersonName
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            modal.hide();
+            
+            showToast('✅ Persona eliminada correctamente', 'success');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+            
+        } else {
+            throw new Error(data.message || 'Error al eliminar');
+        }
+        
+    } catch (error) {
+        console.error('Error eliminando persona:', error);
+        showToast('❌ Error: ' + error.message, 'danger');
+        confirmBtn.innerHTML = originalHTML;
+        confirmBtn.disabled = false;
+    }
+}
+
+async function viewPersonDetails(nombre) {
+    const modal = new bootstrap.Modal(document.getElementById('viewPersonModal'));
+    const modalTitle = document.getElementById('viewPersonName');
+    const modalContent = document.getElementById('viewPersonContent');
+    
+    modalTitle.textContent = nombre;
+    modalContent.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+    
+    try {
+        const response = await fetch(`/api/person_details?nombre=${encodeURIComponent(nombre)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            let imagesHTML = '';
+            if (data.images && data.images.length > 0) {
+                imagesHTML = '<div class="row g-2">';
+                data.images.slice(0, 12).forEach(img => {
+                    imagesHTML += `
+                        <div class="col-md-2 col-4">
+                            <img src="${img}" class="img-fluid rounded" alt="${nombre}">
+                        </div>
+                    `;
+                });
+                imagesHTML += '</div>';
+                
+                if (data.images.length > 12) {
+                    imagesHTML += `<p class="text-muted text-center mt-3">Y ${data.images.length - 12} fotos más...</p>`;
+                }
+            } else {
+                imagesHTML = '<p class="text-muted text-center">No hay fotos disponibles para mostrar</p>';
+            }
+            
+            modalContent.innerHTML = `
+                <div class="mb-3">
+                    <h6 class="text-info"><i class="bi bi-info-circle"></i> Información:</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Nombre:</strong> ${nombre}</li>
+                        <li><strong>Total de fotos:</strong> ${data.total_fotos || 0}</li>
+                        ${data.variaciones ? `<li><strong>Variaciones:</strong> ${Object.keys(data.variaciones).join(', ')}</li>` : ''}
+                    </ul>
+                </div>
+                <h6 class="text-info mb-3"><i class="bi bi-images"></i> Muestra de fotos:</h6>
+                ${imagesHTML}
+            `;
+        } else {
+            throw new Error(data.message || 'Error al cargar detalles');
+        }
+        
+    } catch (error) {
+        console.error('Error cargando detalles:', error);
+        modalContent.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle"></i> Error al cargar los detalles: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// ============================================================
+// MANTENIMIENTO
+// ============================================================
+async function clearCache() {
+    if (!confirm('¿Estás seguro de limpiar la caché?')) {
+        return;
+    }
+    
+    const btn = document.getElementById('clearCacheBtn');
+    const originalHTML = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Limpiando...';
+    btn.disabled = true;
+    
+    try {
+        await fetch('/api/clear_cache', { method: 'POST' });
+        showToast('✅ Caché limpiada correctamente', 'success');
+    } catch (error) {
+        console.error('Error limpiando caché:', error);
+        showToast('❌ Error al limpiar caché', 'danger');
+    } finally {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
+}
+
+function exportData() {
+    showToast('📦 Preparando exportación...', 'info');
+    window.location.href = '/api/export_data';
+}
+
+// ============================================================
+// UTILIDADES
+// ============================================================
+function showToast(message, type = 'info') {
+    const alertHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" 
+             role="alert" style="z-index: 9999; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.innerHTML = alertHTML;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 4000);
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+console.log('✅ admin_v2.js cargado completamente');
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-12-15T17:31:34.947665",
+  "model_type": "lbph",
+  "use_augmentation": true,
+  "train_split": 0.8,
+  "statistics": {
+    "total_images": 70,
+    "total_faces": 272,
+    "low_quality_rejected": 0,
+    "augmented_faces": 204,
+    "persons": {
+      "Edison Godoy": {
+        "images": 70,
+        "faces": 68,
+        "augmented": 204,
+        "rejected": 0
+      }
+    },
+    "training_time": 0.384724
+  },
+  "label_dict": {
+    "0": "Edison Godoy"
+  },
+  "metrics": {
+    "accuracy": 100.0,
+    "correct": 55,
+    "total": 55,
+    "person_metrics": {
+      "Edison Godoy": {
+        "correct": 55,
+        "total": 55
+      }
+    }
+  }
+}

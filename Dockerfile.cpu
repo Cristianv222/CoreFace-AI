@@ -35,12 +35,16 @@ WORKDIR /app
 
 # Copiar requirements y instalar dependencias Python
 COPY requirements-cpu.txt .
+
+# SOLUCIÓN: Usar --ignore-installed para evitar conflictos
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --ignore-installed blinker && \
     pip install --no-cache-dir -r requirements-cpu.txt
 
 # Crear directorios necesarios
-RUN mkdir -p /app/src \
-    /app/data \
+RUN mkdir -p /app/src/web/templates \
+    /app/src/web/static \
+    /app/data/raw \
     /app/models \
     /app/configs \
     /app/tests \
@@ -51,7 +55,7 @@ RUN mkdir -p /app/src \
 COPY . .
 
 # Exponer puertos
-EXPOSE 8888 6006
+EXPOSE 8888 6006 5000
 
 # Comando por defecto (será sobreescrito por docker-compose)
 CMD ["bash"]

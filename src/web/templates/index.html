@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4">
+    <!-- Hero Section -->
+    <div class="page-header text-center mb-4 mb-md-5">
+        <h2 class="h3 h-md-2"><i class="bi bi-star-fill text-primary"></i> Bienvenido a CoreFace-AI</h2>
+        <p class="lead text-muted mb-0">Sistema completo de reconocimiento facial con IA</p>
+    </div>
+    
+    <!-- Cards de Funcionalidades Principales -->
+    <div class="row g-3 g-md-4 mb-4 mb-md-5">
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="icon-wrapper mb-3">
+                    <i class="bi bi-camera-fill"></i>
+                </div>
+                <h3 class="h5 h-md-4 text-white">Capturar Rostros</h3>
+                <p class="small mb-3 mb-md-4 text-muted">Registra nuevas personas con detección automática</p>
+                <a href="/capture" class="btn btn-primary w-100">
+                    <i class="bi bi-arrow-right-circle-fill me-2"></i> Ir a Captura
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="icon-wrapper mb-3">
+                    <i class="bi bi-search"></i>
+                </div>
+                <h3 class="h5 h-md-4 text-white">Reconocimiento</h3>
+                <p class="small mb-3 mb-md-4 text-muted">Identifica personas en tiempo real</p>
+                <a href="/recognize" class="btn btn-success w-100">
+                    <i class="bi bi-play-circle-fill me-2"></i> Reconocer Ahora
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-12 col-sm-12 col-lg-4">
+            <div class="stat-card h-100">
+                <div class="icon-wrapper mb-3">
+                    <i class="bi bi-gear-fill"></i>
+                </div>
+                <h3 class="h5 h-md-4 text-white">Administración</h3>
+                <p class="small mb-3 mb-md-4 text-muted">Gestiona personas y entrena el modelo</p>
+                <a href="/admin" class="btn btn-warning w-100">
+                    <i class="bi bi-tools me-2"></i> Administrar
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Estadísticas Rápidas -->
+    <div class="row g-3 mb-4 mb-md-5">
+        <div class="col-6 col-md-3">
+            <div class="stat-card text-center">
+                <div class="icon-wrapper-small mb-2">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h3 class="h5 mt-2 mb-1 text-white">{{ total_personas|default(0) }}</h3>
+                <p class="small mb-0 text-muted">Personas</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card text-center">
+                <div class="icon-wrapper-small mb-2">
+                    <i class="bi bi-images"></i>
+                </div>
+                <h3 class="h5 mt-2 mb-1 text-white">{{ total_imagenes|default(0) }}</h3>
+                <p class="small mb-0 text-muted">Imágenes</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card text-center">
+                <div class="icon-wrapper-small mb-2">
+                    <i class="bi bi-cpu-fill"></i>
+                </div>
+                <h3 class="h5 mt-2 mb-1">
+                    {% if modelo_entrenado %}
+                    <span class="text-success small">Activo</span>
+                    {% else %}
+                    <span class="text-warning small">Pendiente</span>
+                    {% endif %}
+                </h3>
+                <p class="small mb-0 text-muted">Modelo</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card text-center">
+                <div class="icon-wrapper-small mb-2">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </div>
+                <h3 class="h5 mt-2 mb-1 small text-white">Real-Time</h3>
+                <p class="small mb-0 text-muted">Detección</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Características del Sistema -->
+    <div class="row mb-4 mb-md-5">
+        <div class="col-12">
+            <div class="feature-box">
+                <h4 class="h6 h-md-5 mb-4">
+                    <i class="bi bi-lightbulb-fill text-info me-2"></i> Características del Sistema
+                </h4>
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-4"></i>
+                            <div>
+                                <strong class="d-block text-white">Acceso Multiplataforma</strong>
+                                <small class="text-muted d-none d-md-block">Funciona en cualquier dispositivo</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-4"></i>
+                            <div>
+                                <strong class="d-block text-white">Cámara Universal</strong>
+                                <small class="text-muted d-none d-md-block">Compatible con celular y laptop</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-4"></i>
+                            <div>
+                                <strong class="d-block text-white">Sin Instalación</strong>
+                                <small class="text-muted d-none d-md-block">No requiere apps adicionales</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-4"></i>
+                            <div>
+                                <strong class="d-block text-white">Tiempo Real</strong>
+                                <small class="text-muted d-none d-md-block">Reconocimiento instantáneo</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-4"></i>
+                            <div>
+                                <strong class="d-block text-white">Multi-Usuario</strong>
+                                <small class="text-muted d-none d-md-block">Múltiples usuarios simultáneos</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-check-circle-fill text-success me-3 fs-4"></i>
+                            <div>
+                                <strong class="d-block text-white">Seguridad Avanzada</strong>
+                                <small class="text-muted d-none d-md-block">Procesamiento local seguro</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Call to Action -->
+    <div class="row">
+        <div class="col-12">
+            <div class="cta-box text-center">
+                <div class="icon-wrapper-large mb-3">
+                    <i class="bi bi-rocket-takeoff-fill text-primary"></i>
+                </div>
+                <h3 class="h5 h-md-4 mb-3 text-white">¿Listo para comenzar?</h3>
+                <p class="text-muted mb-4">
+                    Empieza registrando personas para reconocerlas automáticamente
+                </p>
+                <div class="d-flex flex-column flex-sm-row gap-2 gap-md-3 justify-content-center">
+                    <a href="/capture" class="btn btn-primary btn-lg">
+                        <i class="bi bi-camera-fill me-2"></i> Registrar Persona
+                    </a>
+                    <a href="/admin" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-book-fill me-2"></i> Documentación
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #0ea5e9;      /* Cyan brillante */
+        --primary-hover: #0284c7;      /* Cyan oscuro */
+        --success-color: #10b981;      /* Verde esmeralda */
+        --success-hover: #059669;      /* Verde oscuro */
+        --warning-color: #f59e0b;      /* Ámbar */
+        --warning-hover: #d97706;      /* Ámbar oscuro */
+        --info-color: #6366f1;         /* Índigo */
+    }
+    
+    /* Icon wrappers - Iconos grandes y visibles */
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(14, 165, 233, 0.15);
+        border-radius: 20px;
+    }
+    
+    .icon-wrapper i {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+    }
+    
+    .icon-wrapper-small {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(14, 165, 233, 0.15);
+        border-radius: 15px;
+    }
+    
+    .icon-wrapper-small i {
+        font-size: 1.8rem;
+        color: var(--primary-color);
+    }
+    
+    .icon-wrapper-large {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(14, 165, 233, 0.15);
+        border-radius: 25px;
+    }
+    
+    .icon-wrapper-large i {
+        font-size: 3rem;
+        color: var(--primary-color);
+    }
+    
+    /* Botones con iconos visibles */
+    .btn i {
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
+    
+    /* Botones con colores sólidos */
+    .btn-primary {
+        background-color: var(--primary-color) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--primary-hover) !important;
+    }
+    
+    .btn-success {
+        background-color: var(--success-color) !important;
+        color: #fff !important;
+        border: none !important;
+    }
+    
+    .btn-success:hover {
+        background-color: var(--success-hover) !important;
+    }
+    
+    .btn-warning {
+        background-color: var(--warning-color) !important;
+        color: #000 !important;
+        border: none !important;
+        font-weight: 600;
+    }
+    
+    .btn-warning:hover {
+        background-color: var(--warning-hover) !important;
+    }
+    
+    .btn-outline-light {
+        border: 2px solid #fff !important;
+        color: #fff !important;
+    }
+    
+    .btn-outline-light:hover {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+    
+    /* Feature box y CTA box sin gradientes */
+    .feature-box {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    
+    .cta-box {
+        background: #1e293b;
+        border: 2px solid var(--primary-color);
+        border-radius: 12px;
+        padding: 3rem 2rem;
+    }
+    
+    /* Colores de iconos */
+    .text-primary {
+        color: var(--primary-color) !important;
+    }
+    
+    .text-success {
+        color: var(--success-color) !important;
+    }
+    
+    .text-warning {
+        color: var(--warning-color) !important;
+    }
+    
+    .text-info {
+        color: var(--info-color) !important;
+    }
+    
+    /* Responsive font sizes */
+    @media (max-width: 576px) {
+        .icon-wrapper {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .icon-wrapper i {
+            font-size: 2rem;
+        }
+        
+        .icon-wrapper-small {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .icon-wrapper-small i {
+            font-size: 1.5rem;
+        }
+        
+        .icon-wrapper-large {
+            width: 70px;
+            height: 70px;
+        }
+        
+        .icon-wrapper-large i {
+            font-size: 2.2rem;
+        }
+        
+        .stat-card h3 {
+            font-size: 1.1rem !important;
+        }
+        
+        .stat-card p {
+            font-size: 0.85rem;
+        }
+        
+        .stat-card {
+            padding: 1rem !important;
+        }
+        
+        .page-header h2 {
+            font-size: 1.5rem !important;
+        }
+        
+        .page-header .lead {
+            font-size: 0.95rem !important;
+        }
+        
+        .btn {
+            font-size: 0.9rem;
+            padding: 0.6rem 1rem;
+        }
+        
+        .content-card {
+            padding: 1rem !important;
+        }
+        
+        .feature-box, .cta-box {
+            padding: 1.5rem 1rem;
+        }
+    }
+    
+    /* Mejoras de accesibilidad táctil en móviles */
+    @media (max-width: 768px) {
+        .btn {
+            min-height: 44px;
+        }
+    }
+    
+    /* Smooth transitions */
+    .stat-card, .btn, .icon-wrapper, .icon-wrapper-small, .icon-wrapper-large {
+        transition: all 0.3s ease;
+    }
+    
+    /* Hover effects */
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(14, 165, 233, 0.2);
+    }
+    
+    .icon-wrapper:hover, .icon-wrapper-small:hover, .icon-wrapper-large:hover {
+        background: rgba(14, 165, 233, 0.25);
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}

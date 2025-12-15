@@ -5,6 +5,9 @@ matplotlib==3.7.2
 seaborn==0.12.2
 Pillow==10.0.0
 
+# Web Framework
+flask==3.0.0
+werkzeug==3.0.1
 # Deep Learning
 tensorflow==2.14.0
 keras==2.14.0

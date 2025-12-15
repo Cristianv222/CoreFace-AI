@@ -1,0 +1,37 @@
+============================================================
+REPORTE DE ENTRENAMIENTO - CoreFace-AI
+============================================================
+
+Fecha: 2025-12-15 17:31:34
+Modelo: LBPH
+Data Augmentation: Sí
+Train/Test Split: 80%/20%
+
+============================================================
+ESTADÍSTICAS DEL DATASET
+============================================================
+
+Imágenes totales: 70
+Rostros extraídos: 272
+Rostros rechazados (calidad): 0
+Rostros augmentados: 204
+Tiempo de entrenamiento: 0.38s
+
+============================================================
+ESTADÍSTICAS POR PERSONA
+============================================================
+
+Edison Godoy:
+  Imágenes: 70
+  Rostros válidos: 68
+  Augmentados: 204
+
+============================================================
+MÉTRICAS DE EVALUACIÓN
+============================================================
+
+Precisión Global: 100.00%
+Correctos: 55/55
+
+Precisión por Persona:
+  Edison Godoy: 100.00% (55/55)
