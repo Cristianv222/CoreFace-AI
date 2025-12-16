@@ -348,13 +348,13 @@ class ModelTrainer:
             self.stats['total_faces'] += len(person_faces)
             self.stats['persons'][persona] = person_stats
             
-            print(f"   📷 Imágenes: {person_stats['images']}")
-            print(f"   ✅ Rostros válidos: {person_stats['faces']}")
+            print(f"    Imágenes: {person_stats['images']}")
+            print(f"    Rostros válidos: {person_stats['faces']}")
             
             if self.use_augmentation:
-                print(f"   🔄 Augmentados: {person_stats['augmented']}")
+                print(f"    Augmentados: {person_stats['augmented']}")
             
-            print(f"   📊 Total para entrenamiento: {len(person_faces)}\n")
+            print(f"    Total para entrenamiento: {len(person_faces)}\n")
             
             current_label += 1
         
@@ -400,7 +400,7 @@ class ModelTrainer:
             labels: Lista de etiquetas o numpy array
         """
         print(f"{'='*60}")
-        print(f"🧠 Entrenando modelo {self.model_type.upper()}...")
+        print(f" Entrenando modelo {self.model_type.upper()}...")
         print(f"{'='*60}\n")
         
         start_time = datetime.now()
@@ -418,17 +418,17 @@ class ModelTrainer:
         
         # Verificar dimensiones
         if len(faces_array.shape) != 3:
-            print(f"❌ Error: Shape incorrecto de faces: {faces_array.shape}")
+            print(f" Error: Shape incorrecto de faces: {faces_array.shape}")
             print(f"   Esperado: (n_samples, height, width)")
             return
         
         if len(labels_array.shape) != 1:
-            print(f"❌ Error: Shape incorrecto de labels: {labels_array.shape}")
+            print(f" Error: Shape incorrecto de labels: {labels_array.shape}")
             print(f"   Esperado: (n_samples,)")
             return
         
         # Debug: Mostrar información
-        print(f"📊 Datos de entrenamiento:")
+        print(f" Datos de entrenamiento:")
         print(f"   Rostros: {len(faces_array)}")
         print(f"   Tamaño por rostro: {faces_array.shape[1:]} pixels")
         print(f"   Tipo de datos faces: {faces_array.dtype}")
@@ -466,7 +466,7 @@ class ModelTrainer:
             Diccionario con métricas
         """
         print(f"{'='*60}")
-        print("📊 Evaluando modelo...")
+        print(" Evaluando modelo...")
         print(f"{'='*60}\n")
         
         correct = 0
@@ -492,9 +492,9 @@ class ModelTrainer:
         
         accuracy = (correct / total * 100) if total > 0 else 0
         
-        print(f"📈 Precisión Global: {accuracy:.2f}% ({correct}/{total})\n")
+        print(f" Precisión Global: {accuracy:.2f}% ({correct}/{total})\n")
         
-        print("📊 Precisión por Persona:")
+        print(" Precisión por Persona:")
         for person, metrics in person_metrics.items():
             person_acc = (metrics['correct'] / metrics['total'] * 100) if metrics['total'] > 0 else 0
             print(f"   {person}: {person_acc:.2f}% ({metrics['correct']}/{metrics['total']})")
@@ -569,7 +569,7 @@ class ModelTrainer:
         with open(report_path, 'w', encoding='utf-8') as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
         
-        print(f"📄 Reporte guardado: {report_path}")
+        print(f" Reporte guardado: {report_path}")
         
         # También guardar versión legible
         txt_path = output_dir / 'training_report.txt'
@@ -616,7 +616,7 @@ class ModelTrainer:
                     person_acc = (person_metrics['correct'] / person_metrics['total'] * 100) if person_metrics['total'] > 0 else 0
                     f.write(f"  {person}: {person_acc:.2f}% ({person_metrics['correct']}/{person_metrics['total']})\n")
         
-        print(f"📄 Reporte TXT guardado: {txt_path}")
+        print(f" Reporte TXT guardado: {txt_path}")
 
 
 def entrenar_modelo_mejorado(
@@ -638,9 +638,9 @@ def entrenar_modelo_mejorado(
         train_split: Proporción train/test
         evaluate_model: Evaluar modelo con conjunto de prueba
     """
-    print("\n" + "🎯"*30)
+    print("\n" + ""*30)
     print("   CoreFace-AI - Entrenamiento Mejorado")
-    print("🎯"*30 + "\n")
+    print(""*30 + "\n")
     
     # Configurar directorios
     if data_dir is None:
@@ -663,7 +663,7 @@ def entrenar_modelo_mejorado(
     faces, labels, label_dict = trainer.load_dataset(data_dir)
     
     if faces is None or len(faces) == 0:
-        print("❌ No se pudo cargar el dataset")
+        print(" No se pudo cargar el dataset")
         return
     
     # Split train/test
@@ -671,7 +671,7 @@ def entrenar_modelo_mejorado(
         X_train, X_test, y_train, y_test = trainer.split_train_test(faces, labels)
         
         print(f"{'='*60}")
-        print(f"📊 Dataset dividido:")
+        print(f" Dataset dividido:")
         print(f"   Entrenamiento: {len(X_train)} rostros ({train_split*100:.0f}%)")
         print(f"   Prueba: {len(X_test)} rostros ({(1-train_split)*100:.0f}%)")
         print(f"{'='*60}\n")
@@ -683,7 +683,7 @@ def entrenar_modelo_mejorado(
         metrics = trainer.evaluate(X_test, y_test, label_dict)
     else:
         print(f"{'='*60}")
-        print(f"📊 Usando todo el dataset para entrenamiento: {len(faces)} rostros")
+        print(f" Usando todo el dataset para entrenamiento: {len(faces)} rostros")
         print(f"{'='*60}\n")
         
         # Convertir a arrays antes de entrenar
@@ -696,7 +696,7 @@ def entrenar_modelo_mejorado(
     
     # Guardar modelo
     print(f"\n{'='*60}")
-    print("💾 Guardando modelo...")
+    print(" Guardando modelo...")
     print(f"{'='*60}\n")
     
     model_path = trainer.save_model(output_dir)
@@ -705,9 +705,9 @@ def entrenar_modelo_mejorado(
     
     # Resumen final
     print(f"\n{'='*60}")
-    print("✅ ENTRENAMIENTO COMPLETADO")
+    print(" ENTRENAMIENTO COMPLETADO")
     print(f"{'='*60}")
-    print(f"\n📋 Resumen:")
+    print(f"\n Resumen:")
     print(f"   Modelo: {model_type.upper()}")
     print(f"   Personas: {len(label_dict)}")
     print(f"   Rostros totales: {trainer.stats['total_faces']}")
@@ -716,7 +716,7 @@ def entrenar_modelo_mejorado(
     if metrics:
         print(f"   Precisión: {metrics['accuracy']:.2f}%")
     
-    print(f"\n📁 Archivos generados:")
+    print(f"\n Archivos generados:")
     print(f"   {model_path}")
     print(f"   {labels_path}")
     print(f"   {output_dir / 'training_report.json'}")

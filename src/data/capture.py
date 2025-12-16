@@ -1,16 +1,4 @@
-﻿"""
-Sistema de Captura Inteligente Guiado - CoreFace-AI v2.0
-=========================================================
-
-Características principales:
-✅ Guía paso a paso con instrucciones GRANDES en pantalla
-✅ 8 variaciones diferentes (frontal, perfil, gafas, tapado, etc.)
-✅ Verificación de calidad en tiempo real
-✅ Continúa capturando si la persona ya existe
-✅ Feedback visual (colores, iconos, barras de progreso)
-✅ 100+ fotos por persona para máxima precisión
-"""
-
+﻿
 import cv2
 import os
 import time
